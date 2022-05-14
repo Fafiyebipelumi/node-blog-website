@@ -2,7 +2,6 @@ const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const Blog = require('./models/blog');
-const { result } = require('lodash');
 
 const app = express();
 
@@ -14,13 +13,14 @@ mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
 // Register View Engine
 app.set('view engine', 'ejs');
 
-app.listen(3000)
+app.listen(3000);
 
 // Middlewares and static files
 app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// // Mongoose and mongo sandbox routes
+// Mongoose and mongo sandbox routes
 // app.get('/add-blog', (req, res) => {
 //     const blog = new Blog({
 //         title: 'New Blog 2',
@@ -71,7 +71,19 @@ app.get('/about', (req, res) => {
 app.get('/blogs', (req, res) => {
     Blog.find().sort({ createdAt: -1 })
         .then((result) => {
-            res.render('index', { title: 'Blogs', blogs: result })
+            res.render('index', { title: 'All Blogs', blogs: result })
+        })
+        .catch((err) => {
+            console.error(err);
+        })
+});
+
+app.post('/blogs', (req, res) => {
+    const blog = new Blog(req.body)
+
+    blog.save()
+        .then((result) => {
+            res.redirect('/blogs');
         })
         .catch((err) => {
             console.error(err);
